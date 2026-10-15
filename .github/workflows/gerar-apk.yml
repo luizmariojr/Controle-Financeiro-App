@@ -29,6 +29,9 @@ jobs:
           distribution: temurin
           java-version: "17"
 
+      - name: Configurar Android SDK
+        uses: android-actions/setup-android@v4
+
       - name: Configurar Gradle
         uses: gradle/actions/setup-gradle@v5
         with:
@@ -38,7 +41,12 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          sdkmanager "platforms;android-36.1" "build-tools;36.0.0"
+
+          sdkmanager \
+            "platform-tools" \
+            "platforms;android-36.1" \
+            "build-tools;36.0.0"
+
           printf 'sdk.dir=%s\n' "$ANDROID_HOME" > local.properties
 
       - name: Recuperar chave de assinatura de teste
@@ -55,7 +63,8 @@ jobs:
           set -euo pipefail
 
           if [ -n "$KEYSTORE_BASE64" ]; then
-            printf '%s' "$KEYSTORE_BASE64" | base64 --decode > debug.keystore
+            printf '%s' "$KEYSTORE_BASE64" |
+              base64 --decode > debug.keystore
           fi
 
           if [ ! -f debug.keystore ]; then
@@ -75,6 +84,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+
           gradle :app:assembleDebug \
             --no-daemon \
             --console=plain \
@@ -84,7 +94,9 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+
           mkdir -p apk
+
           cp app/build/outputs/apk/debug/app-debug.apk \
             apk/Controle-Financeiro.apk
 
